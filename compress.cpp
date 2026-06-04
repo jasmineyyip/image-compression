@@ -10,15 +10,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-constexpr int NUM_CONTEXTS = 8;
-constexpr int CONTEXT_BOUNDARIES[NUM_CONTEXTS - 1] = {4, 12, 28, 60, 124, 252, 1024};
+constexpr int NUM_CONTEXTS = 16;
+constexpr int NUM_ACTIVITY_BINS = NUM_CONTEXTS / 2;
+constexpr int ACTIVITY_BOUNDARIES[NUM_ACTIVITY_BINS - 1] = {4, 12, 28, 60, 124, 252, 1024};
 
 inline int compute_context(int a, int b, int c) {
-    int activity = std::abs(a - c) + std::abs(b - c);
-    for (int i = 0; i < NUM_CONTEXTS - 1; ++i) {
-        if (activity < CONTEXT_BOUNDARIES[i]) return i;
+    int dh = std::abs(a - c);
+    int dv = std::abs(b - c);
+    int activity = dh + dv;
+    int base = NUM_ACTIVITY_BINS - 1;
+    for (int i = 0; i < NUM_ACTIVITY_BINS - 1; ++i) {
+        if (activity < ACTIVITY_BOUNDARIES[i]) { base = i; break; }
     }
-    return NUM_CONTEXTS - 1;
+    return base * 2 + (dv > dh ? 1 : 0);
 }
 
 static int paeth(int a, int b, int c) {
